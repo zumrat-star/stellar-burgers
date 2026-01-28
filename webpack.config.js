@@ -5,6 +5,7 @@ const Dotenv = require('dotenv-webpack');
 
 module.exports = {
   entry: path.resolve(__dirname, './src/index.tsx'),
+
   module: {
     rules: [
       {
@@ -38,24 +39,36 @@ module.exports = {
         ]
       },
       {
-        test: /\.(jpg|jpeg|png|svg)$/,
-        type: 'asset/resource'
+        test: /\.(jpg|jpeg|png|svg|gif)$/,
+        type: 'asset/resource',
+        generator: {
+          filename: 'assets/[hash][ext][query]',
+          publicPath: '/'
+        }
       },
       {
-        test: /\.(woff|woff2)$/,
-        type: 'asset/resource'
+        test: /\.(woff|woff2|ttf|eot)$/,
+        type: 'asset/resource',
+        generator: {
+          filename: 'fonts/[hash][ext][query]'
+        }
       }
     ]
   },
+
   plugins: [
     new ESLintPlugin({
       extensions: ['.js', '.jsx', '.ts', '.tsx']
     }),
     new HtmlWebpackPlugin({
-      template: './public/index.html'
+      template: './public/index.html',
+      filename: 'index.html',
+      title: 'Stellar Burgers',
+      favicon: './public/favicon.ico'
     }),
     new Dotenv()
   ],
+
   resolve: {
     extensions: [
       '*',
@@ -76,19 +89,42 @@ module.exports = {
       '@ui': path.resolve(__dirname, './src/components/ui'),
       '@ui-pages': path.resolve(__dirname, './src/components/ui/pages'),
       '@utils-types': path.resolve(__dirname, './src/utils/types'),
-      '@api': path.resolve(__dirname, './src/utils/burger-api.ts'),
+      '@api': path.resolve(__dirname, './src/utils'),
       '@slices': path.resolve(__dirname, './src/services/slices'),
-      '@selectors': path.resolve(__dirname, './src/services/selectors')
+      '@selectors': path.resolve(__dirname, './src/services/selectors'),
+      '@services': path.resolve(__dirname, './src/services')
     }
   },
+
   output: {
     path: path.resolve(__dirname, './dist'),
-    filename: 'bundle.js'
+    filename: 'bundle.js',
+    publicPath: '/',
+    clean: true
   },
+
   devServer: {
-    static: path.join(__dirname, './dist'),
+    static: {
+      directory: path.join(__dirname, './dist'),
+      publicPath: '/'
+    },
     compress: true,
-    historyApiFallback: true,
-    port: 4000
+    historyApiFallback: {
+      index: '/',
+      disableDotRule: true
+    },
+    port: 4000,
+    hot: false,
+    open: true,
+    proxy: {
+      '/api': {
+        target: 'https://norma.education-services.ru',
+        changeOrigin: true,
+        secure: false,
+        pathRewrite: {
+          '^/api': '/api'
+        }
+      }
+    }
   }
 };
