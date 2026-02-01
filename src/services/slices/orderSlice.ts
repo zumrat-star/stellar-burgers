@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { orderBurgerApi, getOrderByNumberApi } from '../../utils/burger-api';
 import { TOrder } from '@utils-types';
+import { clearConstructor } from './constructorSlice';
 
 // Типы состояния
 interface OrderState {
@@ -20,17 +21,19 @@ const initialState: OrderState = {
   orderModalData: null
 };
 
-// Async thunks
-
 // 1. Создание заказа
 export const createOrder = createAsyncThunk(
   'order/create',
-  async (ingredients: string[], { rejectWithValue }) => {
+  async (ingredients: string[], { dispatch, rejectWithValue }) => {
     try {
-      const response = await orderBurgerApi(ingredients);
-      return response.order;
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Ошибка оформления заказа');
+      const order = await orderBurgerApi(ingredients);
+      dispatch(clearConstructor());
+      return order;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return rejectWithValue(error.message || 'Ошибка оформления заказа');
+      }
+      return rejectWithValue('Неизвестная ошибка оформления заказа');
     }
   }
 );
@@ -45,8 +48,11 @@ export const fetchOrderByNumber = createAsyncThunk(
         return response.orders[0];
       }
       throw new Error('Заказ не найден');
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Ошибка получения заказа');
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return rejectWithValue(error.message || 'Ошибка получения заказа');
+      }
+      return rejectWithValue('Неизвестная ошибка получения заказа');
     }
   }
 );
@@ -56,7 +62,6 @@ const orderSlice = createSlice({
   name: 'order',
   initialState,
   reducers: {
-    // Очистка данных заказа (при закрытии модалки)
     clearOrder: (state) => {
       state.orderData = null;
       state.orderModalData = null;

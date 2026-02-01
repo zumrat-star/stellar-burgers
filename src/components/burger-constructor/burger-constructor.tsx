@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from '../../services/store';
 import {
   selectConstructor,
-  selectTotalPrice,
-  clearConstructor
+  selectTotalPrice
 } from '../../services/slices/constructorSlice';
 import {
   createOrder,
@@ -53,7 +52,6 @@ export const BurgerConstructor: FC = () => {
 
   const closeOrderModal = () => {
     dispatch(clearOrder());
-    dispatch(clearConstructor());
   };
 
   const price = useMemo(

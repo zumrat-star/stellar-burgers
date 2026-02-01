@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch } from '../../services/store';
-// Импорты страниц
 import { ConstructorPage } from '../../pages';
 import { Feed } from '../../pages';
 import { Login } from '../../pages';
@@ -11,15 +10,13 @@ import { ResetPassword } from '../../pages';
 import { Profile } from '../../pages';
 import { ProfileOrders } from '../../pages';
 import { NotFound404 } from '../../pages';
-// Импорты компонентов
 import { AppHeader } from '../app-header';
 import { IngredientDetails } from '../ingredient-details';
 import { Modal } from '../modal';
 import { OrderInfo } from '../order-info';
 import { ProtectedRoute } from '../protected-route';
-// Импорты действий
 import { checkUserAuth } from '../../services/slices/authSlice';
-
+import { fetchIngredients } from '../../services/slices/ingredientsSlice';
 import '../../index.css';
 import styles from './app.module.css';
 
@@ -48,6 +45,11 @@ const App = () => {
   // Проверяем авторизацию при монтировании
   useEffect(() => {
     dispatch(checkUserAuth());
+  }, [dispatch]);
+
+  // Загружаем ингредиенты один раз при старте приложения
+  useEffect(() => {
+    dispatch(fetchIngredients());
   }, [dispatch]);
 
   const handleModalClose = () => {
@@ -93,7 +95,6 @@ const App = () => {
             </ProtectedRoute>
           }
         />
-        {/* Исправлено: теперь это полноценная страница */}
         <Route path='/ingredients/:id' element={<IngredientPage />} />
 
         {/* Защищённые маршруты */}
@@ -113,7 +114,6 @@ const App = () => {
             </ProtectedRoute>
           }
         />
-        {/* Исправлено: теперь это полноценная страница */}
         <Route
           path='/profile/orders/:number'
           element={

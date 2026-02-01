@@ -12,6 +12,7 @@ import { TBurgerIngredientUIProps } from './type';
 
 export const BurgerIngredientUI: FC<TBurgerIngredientUIProps> = memo(
   ({ ingredient, count, handleAdd, locationState }) => {
+    // locationState приходит как пропс
     const { image, price, name, _id } = ingredient;
 
     return (
@@ -21,7 +22,7 @@ export const BurgerIngredientUI: FC<TBurgerIngredientUIProps> = memo(
           to={`/ingredients/${_id}`}
           state={locationState}
         >
-          {count && <Counter count={count} />}
+          {typeof count === 'number' && count > 0 && <Counter count={count} />}
           <img className={styles.img} src={image} alt='картинка ингредиента.' />
           <div className={`${styles.cost} mt-2 mb-2`}>
             <p className='text text_type_digits-default mr-2'>{price}</p>

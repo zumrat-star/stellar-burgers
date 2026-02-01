@@ -1,7 +1,8 @@
 import { setCookie, getCookie } from './cookie';
 import { TIngredient, TOrder, TOrdersData, TUser } from './types';
 
-const URL = 'https://norma.education-services.ru/api';
+const BASE_URL = 'https://norma.education-services.ru';
+const URL = process.env.NODE_ENV === 'development' ? '/api' : `${BASE_URL}/api`;
 
 const checkResponse = <T>(res: Response): Promise<T> =>
   res.ok ? res.json() : res.json().then((err) => Promise.reject(err));
@@ -115,7 +116,7 @@ export const orderBurgerApi = (data: string[]) =>
       ingredients: data
     })
   }).then((data) => {
-    if (data?.success) return data;
+    if (data?.success) return data.order;
     return Promise.reject(data);
   });
 

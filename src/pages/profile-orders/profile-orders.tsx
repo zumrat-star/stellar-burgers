@@ -1,4 +1,4 @@
-import { useEffect, FC } from 'react';
+import { useEffect, FC, useRef, useState, useCallback } from 'react';
 import { useDispatch, useSelector } from '../../services/store';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -24,42 +24,57 @@ export const ProfileOrders: FC = () => {
   const isLoading = useSelector(selectProfileOrdersLoading);
   const error = useSelector(selectProfileOrdersError);
 
-  // Загружаем только после проверки авторизации и если пользователь авторизован
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const startAutoRefresh = useCallback(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      console.log('🔄 [ProfileOrders] Автообновление истории');
+      dispatch(fetchProfileOrders());
+    }, 10000);
+  }, [dispatch]);
+
   useEffect(() => {
     if (isAuthChecked && user) {
       dispatch(fetchProfileOrders());
+      startAutoRefresh();
     }
-  }, [dispatch, user, isAuthChecked]);
 
-  // Обновляем каждые 10 секунд, только если пользователь авторизован И есть заказы
-  useEffect(() => {
-    if (!user || orders.length === 0) return;
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [dispatch, user, isAuthChecked, startAutoRefresh]);
 
-    const intervalId = setInterval(() => {
-      dispatch(fetchProfileOrders());
-    }, 10000);
+  const handleRefreshOrders = () => {
+    console.log('🟢 [ProfileOrders] Ручное обновление истории');
 
-    return () => clearInterval(intervalId);
-  }, [dispatch, user, orders.length]);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
 
-  // Если не авторизован - перенаправляем на логин
+    dispatch(fetchProfileOrders());
+
+    setTimeout(() => {
+      console.log('⏱️ [ProfileOrders] Возвращаю автообновление');
+      startAutoRefresh();
+    }, 15000);
+  };
+
   useEffect(() => {
     if (isAuthChecked && !user) {
       navigate('/login', { replace: true });
     }
   }, [user, isAuthChecked, navigate]);
 
-  // Пока проверяем авторизацию
   if (!isAuthChecked) {
     return <Preloader />;
   }
 
-  // Пока загружаем данные (первая загрузка)
   if (isLoading && orders.length === 0) {
     return <Preloader />;
   }
 
-  // Если ошибка
   if (error) {
     return (
       <div style={{ textAlign: 'center', padding: '40px' }}>
@@ -68,7 +83,7 @@ export const ProfileOrders: FC = () => {
         </p>
         <button
           className='text text_type_main-default mt-4'
-          onClick={() => dispatch(fetchProfileOrders())}
+          onClick={handleRefreshOrders}
         >
           Попробовать снова
         </button>
